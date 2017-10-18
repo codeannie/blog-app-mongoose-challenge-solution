@@ -1,3 +1,4 @@
+'use strict';
 const mongoose = require('mongoose');
 
 const blogPostSchema = mongoose.Schema({
@@ -23,7 +24,7 @@ blogPostSchema.methods.apiRepr = function() {
     title: this.title,
     created: this.created
   };
-}
+};
 
 const BlogPost = mongoose.model('BlogPost', blogPostSchema);
 
