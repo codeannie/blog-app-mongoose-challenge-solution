@@ -92,7 +92,7 @@ describe('blog posts API integration tests', function() {
             post.should.include.keys(expectedKeys);
           });
           //retrieve individual post & check for correct values 
-          resPost = post.body[0];
+          resPost = res.body[0];
           return BlogPost.findById(resPost.id);
         })
         .then(function(post) {
@@ -100,7 +100,6 @@ describe('blog posts API integration tests', function() {
           resPost.content.should.equal(post.content);
           resPost.author.should.equal(post.authorName);
         });
-      });
     });
   });
   //POST end point - make a new entry > check for keys > check for id
@@ -182,3 +181,4 @@ describe('blog posts API integration tests', function() {
         });
     });
   });
+});
