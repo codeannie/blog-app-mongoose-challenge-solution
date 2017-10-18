@@ -112,12 +112,12 @@ describe('blog posts API integration tests', function() {
           res.should.be.json;
           res.body.should.be.a('object');
           res.body.should.include.keys(expectedKeys); //will this work? 
-
           res.body.id.should.not.be.null;
           res.body.author.should.equal(authorName); //why split it like the solution? 
           res.body.title.should.equal(newPost.title);
           res.body.content.should.equal(newPost.content);
-          return BlogPost.findById(res.body.id); //retrieve the post
+          //return the post as promise
+          return BlogPost.findById(res.body.id); 
         }) 
         //check to see if the post returned from db matches the one submitted 
         .then(function(post) {
@@ -158,8 +158,23 @@ describe('blog posts API integration tests', function() {
     });
   //Delete end point -- remove from db and confirm it is not in db
   describe('DELETE endpoint', function() {
-    it('should remove post from database', function() {
-
-    })
-  })
+    it('should remove post from database using /posts/:id', function() {
+      let postToDelete;
+      //retieve a post
+      return BlogPost.findOne()
+        .then(function(existingPost) {
+          postToDelete = existingPost;
+          //delete retrieved post
+          return chai.request(app)
+            .delete(`/posts/${postToDelete}._id`)
+            .then(function(res) {
+              res.should.have.status(204);
+              return BlogPost.findById(postToDelete.id)
+            })
+            .then(function(res) {
+              should.not.exist(res);
+            });
+        });
+      });
+  });
 });
