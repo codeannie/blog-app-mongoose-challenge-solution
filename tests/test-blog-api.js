@@ -84,7 +84,7 @@ describe('blog posts API integration tests', function() {
           //check res for correct type, status, and if any at all
           res.should.have.status(200);
           res.should.be.json;
-          res.body.should.be.a('array'); // body vs res? 
+          res.body.should.be.a('array'); 
           res.body.should.have.length.of.at.least(1);
           //check each res for keys
           res.body.forEach(function (post) {
@@ -113,9 +113,9 @@ describe('blog posts API integration tests', function() {
           res.should.have.status(201);
           res.should.be.json;
           res.body.should.be.a('object');
-          res.body.should.include.keys(expectedKeys); //will this work? 
+          res.body.should.include.keys(expectedKeys); 
           res.body.id.should.not.be.null;
-          res.body.author.should.equal(authorName); //why split it like the solution? 
+          res.body.author.should.equal(`${newPost.author.firstName} ${newPost.author.lastName}`);  
           res.body.title.should.equal(newPost.title);
           res.body.content.should.equal(newPost.content);
           //return the post as promise
