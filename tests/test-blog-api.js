@@ -101,29 +101,30 @@ describe('blog posts API integration tests', function() {
         });
       });
     //POST end point - make a new entry > check for keys > check for id
-    it('should make a new post', function() {
-      const newPost = generateFakeBlogPost(); 
-      chai.request(app)
-        .post('/posts') 
-        .send(newPost)
-        .then(function(res) {
-          res.should.have.status(201);
-          res.should.be.json;
-          res.body.should.be.a('object');
-          res.body.should.include.keys(expectedKeys); //will this work? 
+    describe('POST endpoint', function() {
+      it('should make a new post', function() {
+        const newPost = generateFakeBlogPost(); 
+        chai.request(app)
+          .post('/posts') 
+          .send(newPost)
+          .then(function(res) {
+            res.should.have.status(201);
+            res.should.be.json;
+            res.body.should.be.a('object');
+            res.body.should.include.keys(expectedKeys); //will this work? 
 
-          res.body.id.should.not.be.null;
-          res.body.author.should.equal(authorName); //why split it like the solution? 
-          res.body.title.should.equal(newPost.title);
-          res.body.content.should.equal(newPost.content);
-          return BlogPost.findById(res.body.id); //retrieve the post
-        }) 
-        //check to see if the post returned from db matches the one submitted 
-        .then(function(post) {
-          post.title.should.equal(newPost.title);
-          post.content.should.equal(newPost.content);
-          post.author.firstName.should.equal(newPost.author.firstName);
-          post.author.lastName.should.equal(newPost.author.lastName);
-        })
-    })
-});
+            res.body.id.should.not.be.null;
+            res.body.author.should.equal(authorName); //why split it like the solution? 
+            res.body.title.should.equal(newPost.title);
+            res.body.content.should.equal(newPost.content);
+            return BlogPost.findById(res.body.id); //retrieve the post
+          }) 
+          //check to see if the post returned from db matches the one submitted 
+          .then(function(post) {
+            post.title.should.equal(newPost.title);
+            post.content.should.equal(newPost.content);
+            post.author.firstName.should.equal(newPost.author.firstName);
+            post.author.lastName.should.equal(newPost.author.lastName);
+            });
+          });
+        });
