@@ -100,31 +100,66 @@ describe('blog posts API integration tests', function() {
           });
         });
       });
-    //POST end point - make a new entry > check for keys > check for id
-    describe('POST endpoint', function() {
-      it('should make a new post', function() {
-        const newPost = generateFakeBlogPost(); 
-        chai.request(app)
-          .post('/posts') 
-          .send(newPost)
-          .then(function(res) {
-            res.should.have.status(201);
-            res.should.be.json;
-            res.body.should.be.a('object');
-            res.body.should.include.keys(expectedKeys); //will this work? 
+  //POST end point - make a new entry > check for keys > check for id
+  describe('POST endpoint', function() {
+    it('should make a new post', function() {
+      const newPost = generateFakeBlogPost(); 
+      chai.request(app)
+        .post('/posts') 
+        .send(newPost)
+        .then(function(res) {
+          res.should.have.status(201);
+          res.should.be.json;
+          res.body.should.be.a('object');
+          res.body.should.include.keys(expectedKeys); //will this work? 
 
-            res.body.id.should.not.be.null;
-            res.body.author.should.equal(authorName); //why split it like the solution? 
-            res.body.title.should.equal(newPost.title);
-            res.body.content.should.equal(newPost.content);
-            return BlogPost.findById(res.body.id); //retrieve the post
-          }) 
-          //check to see if the post returned from db matches the one submitted 
-          .then(function(post) {
-            post.title.should.equal(newPost.title);
-            post.content.should.equal(newPost.content);
-            post.author.firstName.should.equal(newPost.author.firstName);
-            post.author.lastName.should.equal(newPost.author.lastName);
-            });
+          res.body.id.should.not.be.null;
+          res.body.author.should.equal(authorName); //why split it like the solution? 
+          res.body.title.should.equal(newPost.title);
+          res.body.content.should.equal(newPost.content);
+          return BlogPost.findById(res.body.id); //retrieve the post
+        }) 
+        //check to see if the post returned from db matches the one submitted 
+        .then(function(post) {
+          post.title.should.equal(newPost.title);
+          post.content.should.equal(newPost.content);
+          post.author.firstName.should.equal(newPost.author.firstName);
+          post.author.lastName.should.equal(newPost.author.lastName);
           });
         });
+      });
+  //get an existing post from db > make PUT request to change content > check that post was updated
+  describe('PUT endpoint', function() {
+    it('should update an existing blog post', function() {
+      const updateData = {
+        title: 'title successfully changed',
+        content: 'the content has been modified successfully'
+      };
+      //get a document from database
+      return BlogPost.findOne()
+        .then(function(post) {
+          updateData.id = post.id;
+          //make PUT request to send updated data to retrieved post 
+          return chai.request(app)
+            .put(`/posts/${post.id}`)
+            .send(updateData);
+        })
+          //retrieve post from db
+        .then(function(res) {
+          res.should.have.status(204);
+          return BlogPost.findById(updateData.id);
+        })
+          //check post in database to make sure it has updated content
+          .then(function(post) {
+          post.title.should.equal(updateData.title);
+          post.content.should.equal(updateData.content);
+        });
+      });
+    });
+  //Delete end point -- remove from db and confirm it is not in db
+  describe('DELETE endpoint', function() {
+    it('should remove post from database', function() {
+
+    })
+  })
+});
