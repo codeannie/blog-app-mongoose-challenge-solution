@@ -17,34 +17,34 @@ chai.use(chaiHttp);
 function seedBlogPostData() {
   console.info('seeding blog post data');
   const seedData = [];
-    for (let i=1; i<10; i++) {
-      seedData.push(generateFakeBlogPost());
-    }
-    return BlogPost.insertMany(seedData);
-};
+  for (let i=1; i<10; i++) {
+    seedData.push(generateFakeBlogPost());
+  }
+  return BlogPost.insertMany(seedData);
+}
 
 //generate fake blog posts
 function generateFakeBlogPost() { 
   return {
     author: {
-    firstName: faker.name.firstName(),
-    lastName: faker.name.lastName()
+      firstName: faker.name.firstName(),
+      lastName: faker.name.lastName()
     },
-  title: faker.company.catchPhrase(),
-  content: faker.lorem.paragraph(3),
-  created: faker.date.recent()
+    title: faker.company.catchPhrase(),
+    content: faker.lorem.paragraph(3),
+    created: faker.date.recent()
   };
-};
+}
 
 //teardown test database 
 function tearDownDb() {
   console.warn('deleting test database');
   return mongoose.connect.dropDatabase();
-};
+}
 
 //test CRUD endpoints 
 describe('blog posts API integration tests', function() {
-  const expectedKeys = ['id', 'author', 'title', 'content', 'created']
+  const expectedKeys = ['id', 'author', 'title', 'content', 'created'];
 
   before(function() {
     return runServer(TEST_DATABASE_URL);
@@ -74,7 +74,7 @@ describe('blog posts API integration tests', function() {
         .then(function(count) {
           res.body.posts.length.should.be.equal(count);
         });
-      });
+    });
     
     it('should return blog posts with expected keys', function () { 
       let resPost;
@@ -92,14 +92,15 @@ describe('blog posts API integration tests', function() {
             post.should.include.keys(expectedKeys);
           })
           //check individual post for correct values 
-          .then (function(post) {
-            resPost = post.body[0];
-            resPost.title.should.equal(post.title);
-            resPost.content.should.equal(post.content);
-            resPost.author.should.equal(post.authorName);
-          });
+            .then (function(post) {
+              resPost = post.body[0];
+              resPost.title.should.equal(post.title);
+              resPost.content.should.equal(post.content);
+              resPost.author.should.equal(post.authorName);
+            });
         });
-      });
+    });
+  });
   //POST end point - make a new entry > check for keys > check for id
   describe('POST endpoint', function() {
     it('should make a new post', function() {
@@ -125,9 +126,9 @@ describe('blog posts API integration tests', function() {
           post.content.should.equal(newPost.content);
           post.author.firstName.should.equal(newPost.author.firstName);
           post.author.lastName.should.equal(newPost.author.lastName);
-          });
         });
-      });
+    });
+  });
   //get an existing post from db > make PUT request to change content > check that post was updated
   describe('PUT endpoint', function() {
     it('should update an existing blog post', function() {
@@ -144,18 +145,18 @@ describe('blog posts API integration tests', function() {
             .put(`/posts/${post.id}`)
             .send(updateData);
         })
-          //retrieve post from db
+      //retrieve post from db
         .then(function(res) {
           res.should.have.status(204);
           return BlogPost.findById(updateData.id);
         })
-          //check post in database to make sure it has updated content
-          .then(function(post) {
+      //check post in database to make sure it has updated content
+        .then(function(post) {
           post.title.should.equal(updateData.title);
           post.content.should.equal(updateData.content);
         });
-      });
     });
+  });
   //Delete end point -- remove from db and confirm it is not in db
   describe('DELETE endpoint', function() {
     it('should remove post from database using /posts/:id', function() {
@@ -167,14 +168,16 @@ describe('blog posts API integration tests', function() {
           //delete retrieved post
           return chai.request(app)
             .delete(`/posts/${postToDelete}._id`)
+            //retrieve id of deleted post
             .then(function(res) {
               res.should.have.status(204);
-              return BlogPost.findById(postToDelete.id)
+              return BlogPost.findById(postToDelete.id);
             })
+            //confirm that it doesn't exist in database
             .then(function(res) {
               should.not.exist(res);
             });
         });
-      });
+    });
   });
 });
