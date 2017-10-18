@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 const should = chai.should();
 
 const {BlogPost} = require('../models');
-const {app, runServer, closerServer} = require('../server');
+const {app, runServer, closeServer} = require('../server');
 const {TEST_DATABASE_URL} = require('../config');
 
 chai.use(chaiHttp);
@@ -39,7 +39,7 @@ function generateFakeBlogPost() {
 //teardown test database 
 function tearDownDb() {
   console.warn('deleting test database');
-  return mongoose.connect.dropDatabase();
+  return mongoose.connection.dropDatabase();
 }
 
 //test CRUD endpoints 
@@ -67,12 +67,12 @@ describe('blog posts API integration tests', function() {
         .then(function(_res) {
           res = _res;
           res.should.have.status(200);
-          res.body.posts.should.have.length.of.at.least(1);
+          res.body.should.have.length.of.at.least(1);
           return BlogPost.count();
         })
         //num of returned posts should equal to num of posts in database
         .then(function(count) {
-          res.body.posts.length.should.be.equal(count);
+          res.body.should.have.length.of(count);
         });
     });
     
@@ -82,23 +82,25 @@ describe('blog posts API integration tests', function() {
         .get('/posts')
         .then(function(res) {
           //check res for correct type, status, and if any at all
-          res.should.have.status(201);
+          res.should.have.status(200);
           res.should.be.json;
           res.body.should.be.a('array'); // body vs res? 
           res.body.should.have.length.of.at.least(1);
-
+          //check each res for keys
           res.body.forEach(function (post) {
             post.should.be.a('object');
             post.should.include.keys(expectedKeys);
-          })
-          //check individual post for correct values 
-            .then (function(post) {
-              resPost = post.body[0];
-              resPost.title.should.equal(post.title);
-              resPost.content.should.equal(post.content);
-              resPost.author.should.equal(post.authorName);
-            });
+          });
+          //retrieve individual post & check for correct values 
+          resPost = post.body[0];
+          return BlogPost.findById(resPost.id);
+        })
+        .then(function(post) {
+          resPost.title.should.equal(post.title);
+          resPost.content.should.equal(post.content);
+          resPost.author.should.equal(post.authorName);
         });
+      });
     });
   });
   //POST end point - make a new entry > check for keys > check for id
@@ -120,7 +122,7 @@ describe('blog posts API integration tests', function() {
           //return the post as promise
           return BlogPost.findById(res.body.id); 
         }) 
-        //check to see if the post returned from db matches the one submitted 
+      //check to see if the post returned from db matches the one submitted 
         .then(function(post) {
           post.title.should.equal(newPost.title);
           post.content.should.equal(newPost.content);
@@ -136,7 +138,7 @@ describe('blog posts API integration tests', function() {
         title: 'title successfully changed',
         content: 'the content has been modified successfully'
       };
-      //get a document from database
+        //get a document from database
       return BlogPost.findOne()
         .then(function(post) {
           updateData.id = post.id;
@@ -145,12 +147,12 @@ describe('blog posts API integration tests', function() {
             .put(`/posts/${post.id}`)
             .send(updateData);
         })
-      //retrieve post from db
+        //retrieve post from db
         .then(function(res) {
           res.should.have.status(204);
           return BlogPost.findById(updateData.id);
         })
-      //check post in database to make sure it has updated content
+        //check post in database to make sure it has updated content
         .then(function(post) {
           post.title.should.equal(updateData.title);
           post.content.should.equal(updateData.content);
@@ -168,16 +170,15 @@ describe('blog posts API integration tests', function() {
           //delete retrieved post
           return chai.request(app)
             .delete(`/posts/${postToDelete}._id`)
-            //retrieve id of deleted post
+          //retrieve id of deleted post
             .then(function(res) {
               res.should.have.status(204);
               return BlogPost.findById(postToDelete.id);
             })
-            //confirm that it doesn't exist in database
+          //confirm that it doesn't exist in database
             .then(function(res) {
               should.not.exist(res);
             });
         });
     });
   });
-});
